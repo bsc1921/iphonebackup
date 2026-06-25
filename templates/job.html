@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Job – {{ job.label }}{% endblock %}
+
+{% block content %}
+<h1>Job: {{ job.label }}</h1>
+
+<section class="card">
+  <table>
+    <tbody>
+      <tr><th>ID</th><td class="mono">{{ job.id }}</td></tr>
+      <tr><th>Status</th><td><span class="badge badge-{{ job.status }}">{{ job.status }}</span></td></tr>
+      <tr><th>Started</th><td>{{ job.started_at or '—' }}</td></tr>
+      <tr><th>Finished</th><td>{{ job.finished_at or '—' }}</td></tr>
+      <tr><th>Return code</th><td>{{ job.returncode if job.returncode is not none else '—' }}</td></tr>
+    </tbody>
+  </table>
+</section>
+
+{% if job.output %}
+<section class="card">
+  <h2>Output</h2>
+  <pre class="log">{{ job.output }}</pre>
+</section>
+{% endif %}
+
+{% if job.error %}
+<section class="card">
+  <h2>Stderr</h2>
+  <pre class="log log-error">{{ job.error }}</pre>
+</section>
+{% endif %}
+
+{% if job.status in ('queued', 'running') %}
+<script>
+  setTimeout(function() { location.reload(); }, 3000);
+</script>
+<p class="muted">Page refreshes every 3 seconds while the job is running.</p>
+{% endif %}
+
+<div class="actions">
+  <a class="btn" href="{{ url_for('job_list') }}">← All Jobs</a>
+  <a class="btn" href="{{ url_for('index') }}">Dashboard</a>
+</div>
+{% endblock %}

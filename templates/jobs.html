@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Jobs – iPhone Backup Manager{% endblock %}
+
+{% block content %}
+<h1>All Jobs</h1>
+
+<section class="card">
+  {% if jobs %}
+  <table>
+    <thead>
+      <tr>
+        <th>Label</th>
+        <th>Status</th>
+        <th>Started</th>
+        <th>Finished</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr>
+        <td>{{ job.label }}</td>
+        <td><span class="badge badge-{{ job.status }}">{{ job.status }}</span></td>
+        <td>{{ job.started_at or '—' }}</td>
+        <td>{{ job.finished_at or '—' }}</td>
+        <td><a href="{{ url_for('job_status', job_id=job.id) }}">Details</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No jobs yet.</p>
+  {% endif %}
+</section>
+
+<div class="actions">
+  <a class="btn" href="{{ url_for('index') }}">← Dashboard</a>
+</div>
+{% endblock %}

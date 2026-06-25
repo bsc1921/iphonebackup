@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – iPhone Backup Manager{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<section class="card">
+  <h2>Connected Devices</h2>
+  {% if devices %}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>UDID</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for device in devices %}
+      <tr>
+        <td>{{ device.name }}</td>
+        <td class="mono">{{ device.udid }}</td>
+        <td>
+          <a class="btn btn-sm" href="{{ url_for('device_info', udid=device.udid) }}">Info</a>
+          <form method="post" action="{{ url_for('backup') }}" style="display:inline">
+            <input type="hidden" name="udid" value="{{ device.udid }}">
+            <button class="btn btn-sm btn-primary" type="submit">Backup</button>
+          </form>
+          <form method="post" action="{{ url_for('restore') }}" style="display:inline">
+            <input type="hidden" name="udid" value="{{ device.udid }}">
+            <button class="btn btn-sm btn-danger" type="submit"
+              onclick="return confirm('Restore will overwrite device data. Continue?')">
+              Restore
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No devices connected. Connect an iPhone via USB and trust this computer.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Backups <small class="muted">({{ backup_dir }})</small></h2>
+  {% if backups %}
+  <table>
+    <thead>
+      <tr>
+        <th>Device UDID</th>
+        <th>Last Modified</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for backup in backups %}
+      <tr>
+        <td class="mono">{{ backup.udid }}</td>
+        <td>{{ backup.modified }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No backups found in <code>{{ backup_dir }}</code>.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Recent Jobs</h2>
+  {% if jobs %}
+  <table>
+    <thead>
+      <tr>
+        <th>Label</th>
+        <th>Status</th>
+        <th>Started</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr>
+        <td>{{ job.label }}</td>
+        <td><span class="badge badge-{{ job.status }}">{{ job.status }}</span></td>
+        <td>{{ job.started_at or '—' }}</td>
+        <td><a href="{{ url_for('job_status', job_id=job.id) }}">Details</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No jobs yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
