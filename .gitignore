@@ -1,0 +1,23 @@
+backend/.venv/
+backend/__pycache__/
+backend/config.json
+logs/
+backups/
+*.pyc
+*.pyo
+*.log
+.DS_Store
+Thumbs.db
+
+# Bundled libimobiledevice binaries (install locally or via deploy target)
+libimobiledevice*/
+original_libimobiledevice/
+original_libimobiledevice.zip
+*.zip
+
+# One-off migration / fix scripts from development
+fix_*.py
+find_garbled.py
+scan_html.py
+show_remaining.py
+remove_recursive.py

@@ -1,0 +1,15 @@
+{
+  "setup_complete": false,
+  "host": "127.0.0.1",
+  "port": 5055,
+  "bind_all_interfaces": false,
+  "api_token": "",
+  "backup_root": "",
+  "log_file": "",
+  "default_full_backup": true,
+  "device_label_prefix": "iphone",
+  "allow_encryption_command": true,
+  "libimobiledevice_path": "",
+  "compute_backup_sizes": false,
+  "cors_origins": []
+}

@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>iPhoneManager</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128241;</text></svg>"/>
+  <link rel="stylesheet" href="/style.css?v=3"/>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-logo">&#128241;</div>
+    <div>
+      <span class="brand-name">iPhoneManager</span>
+      <span class="brand-version">v2.0</span>
+    </div>
+  </div>
+  <div id="topbarBreadcrumb" style="display:none;align-items:center;gap:6px;font-size:12px;color:#6b7280">
+    <button class="tbtn" onclick="showSection('overview')" style="padding:4px 10px;font-size:11px">&#8592; Home</button>
+    <span style="color:#374151">/</span>
+    <span id="breadcrumbLabel" style="color:#d1d5db;font-weight:600"></span>
+  </div>
+  <div class="topbar-device" id="topbarDevice">
+    <div class="topbar-device-chip" id="deviceChip">
+      <span class="chip-dot"></span>
+      <span id="chipText">No device connected</span>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="tbtn" onclick="detectDevice()">&#128269; Detect</button>
+    <button class="tbtn" onclick="showSection('settings')">&#9881;&#65039; Settings</button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <!-- Device card -->
+    <div class="device-card" id="deviceCard">
+      <div class="phone-art" id="phoneArt">
+        <div class="phone-body">
+          <div class="phone-screen">
+            <span id="phoneEmoji">&#128241;</span>
+          </div>
+        </div>
+      </div>
+      <div class="device-meta" id="deviceMeta">
+        <div class="device-name" id="deviceName">No Device</div>
+        <div class="device-sub" id="deviceSub">Connect via USB</div>
+        <div class="device-sub" id="deviceIos"></div>
+        <div class="battery-row" id="batteryRow" style="display:none">
+          <div class="battery-bar-wrap">
+            <div class="battery-fill" id="batteryFill"></div>
+          </div>
+          <span class="battery-pct" id="batteryPct"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidenav">
+      <div class="nav-group-label">DEVICE</div>
+      <a class="navlink active" data-section="overview"     onclick="showSection('overview')">    <i>&#127968;</i> Overview</a>
+
+      <div class="nav-group-label">DATA</div>
+      <a class="navlink" data-section="backup"      onclick="showSection('backup')">      <i>&#128190;</i> Backup</a>
+      <a class="navlink" data-section="restore"     onclick="showSection('restore')">     <i>&#9851;</i> Restore</a>
+      <a class="navlink" data-section="history"     onclick="showSection('history')">     <i>&#128194;</i> History</a>
+
+      <div class="nav-group-label">TOOLS</div>
+      <a class="navlink" data-section="apps"        onclick="showSection('apps')">        <i>&#128230;</i> Apps</a>
+      <a class="navlink" data-section="files"       onclick="showSection('files')">       <i>&#128194;</i> Files</a>
+      <a class="navlink" data-section="mirror"      onclick="showSection('mirror')">      <i>&#128421;</i> Screen Mirror</a>
+      <a class="navlink" data-section="location"    onclick="showSection('location')">    <i>&#128205;</i> Location</a>
+      <a class="navlink" data-section="diagnostics" onclick="showSection('diagnostics')"> <i>&#128267;</i> Diagnostics</a>
+      <a class="navlink" data-section="syslog"      onclick="showSection('syslog')">      <i>&#128203;</i> Syslog</a>
+      <a class="navlink" data-section="encryption"  onclick="showSection('encryption')">  <i>&#128274;</i> Encryption</a>
+
+      <div class="nav-group-label">SYSTEM</div>
+      <a class="navlink" data-section="settings"    onclick="showSection('settings')">    <i>&#9881;</i> Settings</a>
+
+      <div class="nav-group-label">QUICK ACTIONS</div>
+      <a class="navlink" onclick="showSection('backup'); detectDevice()"><i>&#128190;</i> Back Up Now</a>
+      <a class="navlink" onclick="quickTransfer()"><i>&#9889;</i> Quick Transfer</a>
+      <a class="navlink" onclick="showSection('restore'); loadRestoreDevices(); loadRestoreBackups()"><i>&#9851;</i> Restore Backup</a>
+      <a class="navlink" onclick="showSection('apps'); loadApps()"><i>&#128230;</i> Manage Apps</a>
+      <a class="navlink" onclick="showSection('files'); afcRefresh()"><i>&#128194;</i> Browse Files</a>
+      <a class="navlink" onclick="showSection('location')"><i>&#128205;</i> Spoof Location</a>
+      <a class="navlink" onclick="showSection('mirror'); startMirror()"><i>&#128421;</i> Screen Mirror</a>
+      <a class="navlink" onclick="showSection('diagnostics'); loadBattery()"><i>&#128267;</i> Diagnostics</a>
+      <a class="navlink" onclick="detectDevice()"><i>&#128260;</i> Refresh Device</a>
+    </nav>
+
+    <!-- Storage bar -->
+    <div class="storage-panel" id="storagePanel">
+      <div class="storage-header">
+        <span class="small">Storage</span>
+        <span class="small muted" id="storageUsed">&mdash;</span>
+      </div>
+      <div class="storage-track">
+        <div class="st-seg st-photos"   id="stPhotos"   style="width:0%"></div>
+        <div class="st-seg st-apps"     id="stApps"     style="width:0%"></div>
+        <div class="st-seg st-messages" id="stMessages" style="width:0%"></div>
+        <div class="st-seg st-other"    id="stOther"    style="width:0%"></div>
+        <div class="st-seg st-free"     id="stFree"     style="width:100%"></div>
+      </div>
+      <div class="storage-legend">
+        <span><b class="dot dt-photos"></b>Photos</span>
+        <span><b class="dot dt-apps"></b>Apps</span>
+        <span><b class="dot dt-messages"></b>Msg</span>
+        <span><b class="dot dt-other"></b>Other</span>
+        <span><b class="dot dt-free"></b>Free</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <section id="sec-overview" class="sec active">
+      <div class="sec-header">
+        <div>
+          <h1>Devices</h1>
+          <p>Select a device to manage</p>
+        </div>
+        <div class="hdr-right" style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary" onclick="detectDevice()">&#128269; Refresh</button>
+        </div>
+      </div>
+      <div id="devicePickerGrid" class="device-picker-grid"></div>
+      <div id="overviewContent" style="display:none"></div>
+    </section>
+
+    <!-- BACKUP -->
+    <section id="sec-backup" class="sec">
+      <div class="sec-header">
+        <div><h1>Back Up</h1><p>Create a local encrypted backup to your NAS</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Device</h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer">
+              <input type="checkbox" id="wifiToggle" onchange="toggleWifiMode()" style="cursor:pointer"/>
+              &#128246; WiFi Backup
+            </label>
+            <button class="btn btn-sm btn-ghost" onclick="wifiBackupMode ? detectWifiDevices() : detectDevice()">&#128269; Refresh</button>
+          </div>
+        </div>
+        <div id="backupDeviceList"><p class="muted">No device detected.</p></div>
+        <div class="mode-row">
+          <span class="small muted">Mode:</span>
+          <label class="radio-opt"><input type="radio" name="bkMode" value="auto" checked onchange="onModeChange()"> Auto</label>
+          <label class="radio-opt"><input type="radio" name="bkMode" value="incremental" onchange="onModeChange()"> Incremental</label>
+          <label class="radio-opt"><input type="radio" name="bkMode" value="full" onchange="onModeChange()"> Full</label>
+          <span class="small muted" id="modeHint">First run = full, then incremental</span>
+        </div>
+      </div>
+      <div class="card" id="bkProgressCard" style="display:none">
+        <div class="card-hdr">
+          <h2>Progress</h2>
+          <div class="hdr-controls">
+            <button class="btn btn-sm btn-warn" id="btnBkPause" onclick="pauseResumeBackup()">&#9208; Pause</button>
+            <button class="btn btn-sm btn-danger" onclick="stopBackup()">&#9209; Stop</button>
+            <span class="badge" id="bkBadge">Running</span>
+          </div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-track"><div class="prog-fill" id="bkFill" style="width:0%"></div></div>
+          <span class="prog-pct" id="bkPct">0%</span>
+        </div>
+        <div class="prog-files" id="bkFileCount"></div>
+        <p class="prog-file" id="bkFile">Preparing</p>
+        <div class="cat-grid">
+          <div class="cat-tile"><span class="ct-icon">&#127760;</span><span class="ct-name">Photos</span>  <span class="ct-val" id="cv-Photos">0</span>  <div class="ct-bar"><div class="ct-fill cf-photos"   id="cb-Photos"   style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#128230;</span><span class="ct-name">Apps</span>    <span class="ct-val" id="cv-Apps">0</span>    <div class="ct-bar"><div class="ct-fill cf-apps"     id="cb-Apps"     style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#128172;</span><span class="ct-name">Messages</span><span class="ct-val" id="cv-Messages">0</span><div class="ct-bar"><div class="ct-fill cf-messages" id="cb-Messages" style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#128100;</span><span class="ct-name">Contacts</span><span class="ct-val" id="cv-Contacts">0</span><div class="ct-bar"><div class="ct-fill cf-contacts" id="cb-Contacts" style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#10084;&#65039;</span><span class="ct-name">Health</span>  <span class="ct-val" id="cv-Health">0</span>  <div class="ct-bar"><div class="ct-fill cf-health"   id="cb-Health"   style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#128221;</span><span class="ct-name">Notes</span>   <span class="ct-val" id="cv-Notes">0</span>   <div class="ct-bar"><div class="ct-fill cf-notes"    id="cb-Notes"    style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#9881;</span><span class="ct-name">Calendar</span><span class="ct-val" id="cv-Calendar">0</span><div class="ct-bar"><div class="ct-fill cf-calendar" id="cb-Calendar" style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#127760;&#144;</span><span class="ct-name">Safari</span>  <span class="ct-val" id="cv-Safari">0</span>  <div class="ct-bar"><div class="ct-fill cf-safari"   id="cb-Safari"   style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#9881;</span><span class="ct-name">Settings</span><span class="ct-val" id="cv-Settings">0</span><div class="ct-bar"><div class="ct-fill cf-settings" id="cb-Settings" style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#9993;</span><span class="ct-name">Mail</span>    <span class="ct-val" id="cv-Mail">0</span>    <div class="ct-bar"><div class="ct-fill cf-mail"     id="cb-Mail"     style="width:0%"></div></div></div>
+          <div class="cat-tile"><span class="ct-icon">&#128193;</span><span class="ct-name">Other</span>   <span class="ct-val" id="cv-Other">0</span>   <div class="ct-bar"><div class="ct-fill cf-other"    id="cb-Other"    style="width:0%"></div></div></div>
+        </div>
+        <details><summary class="small muted">Live Log</summary><div class="logbox" id="bkLog"></div></details>
+      </div>
+    </section>
+
+    <!-- RESTORE -->
+    <section id="sec-restore" class="sec">
+      <div class="sec-header"><div><h1>Restore</h1><p>Restore a backup to a connected device</p></div></div>
+      <div class="card">
+        <div class="card-hdr"><h2>Target Device</h2><button class="btn btn-sm btn-ghost" onclick="loadRestoreDevices()">&#128269; Refresh</button></div>
+        <div id="restoreDeviceList"><p class="muted">No device detected.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Select Backup</h2><button class="btn btn-sm btn-ghost" onclick="loadRestoreBackups()">&#128260; Refresh</button></div>
+        <div id="restoreBackupList"><p class="muted">Loading</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Password</h2></div>
+        <input id="restorePwd" type="password" placeholder="Leave blank if not encrypted" class="inp"/>
+      </div>
+      <div class="card center-card">
+        <p class="warn-text"> This will erase all data on the device.</p>
+        <button class="btn btn-danger" onclick="startRestore()">&#9851; Restore to Device</button>
+      </div>
+      <div class="card" id="rsProgressCard" style="display:none">
+        <div class="card-hdr">
+          <h2>Restore Progress</h2>
+          <div class="hdr-controls">
+            <button class="btn btn-sm btn-warn" id="btnRsPause" onclick="pauseResumeRestore()">&#9208; Pause</button>
+            <button class="btn btn-sm btn-danger" onclick="stopRestore()">&#9209; Stop</button>
+            <span class="badge" id="rsBadge">Running</span>
+          </div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-track"><div class="prog-fill prog-fill-restore" id="rsFill" style="width:0%"></div></div>
+          <span class="prog-pct" id="rsPct">0%</span>
+        </div>
+        <p class="prog-file" id="rsFile">Preparing</p>
+        <details><summary class="small muted">Live Log</summary><div class="logbox" id="rsLog"></div></details>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="sec-history" class="sec">
+      <div class="sec-header">
+        <div><h1>Backup History</h1><p>All backups stored on your NAS</p></div>
+        <button class="btn btn-ghost" onclick="loadHistory()">&#128260; Refresh</button>
+      </div>
+      <div id="historyList"><p class="muted">Loading</p></div>
+    </section>
+
+    <!-- BACKUP DETAIL MODAL -->
+    <div id="detailModal" class="modal" style="display:none" onclick="closeDetail(event)">
+      <div class="modal-box">
+        <div class="modal-hdr">
+          <h2 id="detailTitle">Backup Detail</h2>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('detailModal').style.display='none'">&#10005; Close</button>
+        </div>
+        <div id="detailDevice" class="detail-device"></div>
+        <div id="detailCats" class="detail-cats"></div>
+        <div id="detailFiles"></div>
+      </div>
+    </div>
+
+    <!-- APPS -->
+    <section id="sec-apps" class="sec">
+      <div class="sec-header">
+        <div><h1>Apps</h1><p>Installed applications on device</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="appSearch" class="inp inp-sm" placeholder="Search apps" oninput="filterApps()"/>
+          <button class="btn btn-ghost" onclick="loadApps()">&#128260; Refresh</button>
+        </div>
+      </div>
+      <div id="appList"><p class="muted">Select a device and click Refresh.</p></div>
+    </section>
+
+    <!-- FILES -->
+    <section id="sec-files" class="sec">
+      <div class="sec-header">
+        <div><h1>Files</h1><p id="filePath">/ &mdash; iPhone filesystem</p></div>
+          <button class="btn btn-ghost btn-sm" onclick="afcUp()">&#8593; Up</button>
+          <button class="btn btn-ghost btn-sm" onclick="afcRefresh()">&#128260; Refresh</button>
+        </div>
+      </div>
+      <div class="card" id="fileList"><p class="muted">Connect a device and click Refresh.</p></div>
+    </section>
+
+    <!-- LOCATION -->
+    <section id="sec-location" class="sec">
+      <div class="sec-header"><div><h1>Location</h1><p>Spoof GPS location &amp; manage developer mode</p></div></div>
+      <div class="card">
+        <div class="card-hdr"><h2>&#128205; Set Location</h2></div>
+        <p class="small muted" style="margin-bottom:12px">Note: Works on iOS 16 and below. iOS 17+ requires developer mode.</p>
+        <div class="inp-row" style="margin-bottom:10px">
+          <input id="locLat" class="inp" placeholder="Latitude (e.g. 32.8371)" type="number" step="any"/>
+          <input id="locLon" class="inp" placeholder="Longitude (e.g. -97.082)" type="number" step="any"/>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="setLocation()">&#128205; Set Location</button>
+          <button class="btn btn-danger"  onclick="resetLocation()">&#10060; Reset to Real GPS</button>
+        </div>
+        <p class="small muted" id="locMsg" style="margin-top:10px"></p>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>&#11088; Quick Locations</h2></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="quickLoc(40.7128,-74.0060)">&#128509; New York</button>
+          <button class="btn btn-ghost" onclick="quickLoc(34.0522,-118.2437)">&#127882; Los Angeles</button>
+          <button class="btn btn-ghost" onclick="quickLoc(51.5074,-0.1278)">&#127981; London</button>
+          <button class="btn btn-ghost" onclick="quickLoc(48.8566,2.3522)">&#128508; Paris</button>
+          <button class="btn btn-ghost" onclick="quickLoc(35.6762,139.6503)">&#128507; Tokyo</button>
+          <button class="btn btn-ghost" onclick="quickLoc(25.2048,55.2708)">&#127961; Dubai</button>
+          <button class="btn btn-ghost" onclick="quickLoc(32.8371,-97.082)">&#127968; Home (Euless TX)</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>&#128104;&#8205;&#128187; Developer Mode</h2></div>
+        <p class="small muted" style="margin-bottom:10px">Required for screen mirror on iOS 17+ and location spoof on iOS 17+.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="checkDevMode()">&#128269; Check Status</button>
+          <button class="btn btn-primary" onclick="enableDevMode()">Enable</button>
+          <button class="btn btn-ghost" onclick="mountDevImage()">&#128191; Mount Dev Image</button>
+        </div>
+        <p class="small muted" id="devModeMsg" style="margin-top:10px"></p>
+      </div>
+    </section>
+
+    <!-- SCREEN MIRROR -->
+    <section id="sec-mirror" class="sec">
+      <div class="sec-header">
+        <div><h1>Screen Mirror</h1><p>Live view of your iPhone screen</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="small muted" id="mirrorFps"></span>
+          <button class="btn btn-primary" id="btnMirrorStart"  onclick="startMirror()">&#9654; Start</button>
+          <button class="btn btn-ghost"   id="btnMirrorStop"   onclick="stopMirror()" style="display:none">&#9209; Stop</button>
+        </div>
+      </div>
+      <div id="mirrorPaneContainer" style="display:flex;height:calc(100vh - 180px);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--card)">
+        <!-- Left: phone frame -->
+        <div id="mirrorPaneLeft" style="width:340px;min-width:120px;flex-shrink:0;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative">
+          <div class="mirror-frame" id="mirrorFrame">
+            <div class="mirror-placeholder" id="mirrorPlaceholder">
+              <span>&#128421;</span>
+              <p>Click Start to begin screen mirroring</p>
+              <p class="small muted">iPhone must be unlocked</p>
+            </div>
+            <img id="mirrorImg" style="display:none" alt="Screen Mirror"/>
+          </div>
+          <!-- Collapse button -->
+          <button id="btnCollapseLeft" onclick="toggleMirrorPane()" title="Collapse/expand phone pane"
+            style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;z-index:10">&#9664;</button>
+        </div>
+        <!-- Divider -->
+        <div id="mirrorDivider" style="width:5px;background:var(--border);cursor:col-resize;flex-shrink:0;transition:background .15s" onmouseenter="this.style.background='var(--blue)'" onmouseleave="this.style.background='var(--border)'"></div>
+        <!-- Right: controls -->
+        <div id="mirrorPaneRight" style="flex:1;overflow-y:auto;padding:20px">
+          <h3 style="font-size:13px;font-weight:600;margin-bottom:12px">Mirror Controls</h3>
+          <p class="small muted" id="mirrorError" style="margin-bottom:10px;color:var(--red)"></p>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+            <div class="batt-stat"><span>Status</span><span class="batt-val" id="mirrorStatus">Stopped</span></div>
+            <div class="batt-stat"><span>FPS</span><span class="batt-val" id="mirrorFps2">&mdash;</span></div>
+            <div class="batt-stat"><span>Device</span><span class="batt-val" id="mirrorDevice">&mdash;</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-primary" id="btnMirrorStart2" onclick="startMirror()">&#9654; Start Mirror</button>
+            <button class="btn btn-ghost"   id="btnMirrorStop2"  onclick="stopMirror()" style="display:none">&#9209; Stop Mirror</button>
+            <button class="btn btn-ghost" onclick="mountDevImage()" style="margin-top:8px">&#128191; Mount Dev Image (iOS 17+)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DIAGNOSTICS -->
+    <section id="sec-diagnostics" class="sec">
+      <div class="sec-header"><div><h1>Diagnostics</h1><p>Battery health, crash reports &amp; device control</p></div></div>
+      <div class="diag-grid">
+        <div class="card">
+          <div class="card-hdr"><h2>&#128267; Battery</h2><button class="btn btn-sm btn-ghost" onclick="loadBattery()">Refresh</button></div>
+          <div id="batteryInfo"><p class="muted">Click Refresh</p></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><h2>&#128165; Crash Reports</h2><button class="btn btn-sm btn-ghost" onclick="loadCrashes()">Fetch</button></div>
+          <div id="crashList"><p class="muted">Click Fetch</p></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><h2>&#128564; Sleep Log</h2><button class="btn btn-sm btn-ghost" onclick="loadSleepLog()">Fetch</button></div>
+          <pre id="sleepLog" class="logbox" style="max-height:200px">Click Fetch</pre>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><h2>&#9889; Device Control</h2></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-warn" onclick="restartDevice()">&#128260; Restart</button>
+            <button class="btn btn-danger" onclick="shutdownDevice()">&#9211; Shutdown</button>
+          </div>
+          <p class="small muted" id="diagMsg" style="margin-top:8px"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SYSLOG -->
+    <section id="sec-syslog" class="sec">
+      <div class="sec-header">
+        <div><h1>Syslog</h1><p>Live device log stream</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="syslogFilter" class="inp inp-sm" placeholder="Filter" oninput="filterSyslog()"/>
+          <button class="btn btn-primary" id="btnSysStart" onclick="startSyslog()">&#9654; Start</button>
+          <button class="btn btn-ghost"   id="btnSysStop"  onclick="stopSyslog()" style="display:none">&#9209; Stop</button>
+          <button class="btn btn-ghost" onclick="clearSyslog()">&#128209; Clear</button>
+        </div>
+      </div>
+      <div class="pane-container vertical" style="height:calc(100vh - 220px)">
+        <div class="pane" style="flex:1;padding:0;overflow:hidden">
+          <div class="logbox syslog-box" id="syslogBox" style="height:100%;max-height:none;border-radius:0;margin:0;border:none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENCRYPTION -->
+    <section id="sec-encryption" class="sec">
+      <div class="sec-header"><div><h1>Encryption</h1><p>Manage backup password protection</p></div></div>
+      <div class="card">
+        <p class="warn-text"> Remember this password &mdash; encrypted backups cannot be restored without it.</p>
+        <div class="inp-row" style="margin-top:12px">
+          <input id="encPwd" type="password" placeholder="Backup encryption password" class="inp"/>
+          <button class="btn btn-primary" onclick="enableEncryption()">Enable</button>
+        </div>
+        <pre id="encOutput" style="display:none;margin-top:12px"></pre>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="sec-settings" class="sec">
+      <div class="sec-header"><div><h1>Settings</h1><p>System check &amp; configuration</p></div></div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>&#128194; Backup Location</h2></div>
+        <p class="small muted" style="margin-bottom:10px">Where backups are saved and restored from. Can be a local path or a NAS network path.</p>
+        <div class="inp-row" style="margin-bottom:10px">
+          <input id="cfgBackupRoot" class="inp" style="min-width:360px" placeholder="e.g. \\NAS\share\iPhoneBackups or backups"/>
+          <button class="btn btn-primary" onclick="saveBackupLocation()">&#128190; Save</button>
+          <button class="btn btn-ghost" onclick="loadConfig()">&#128260; Refresh</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>&#128274; Access &amp; Network</h2></div>
+        <p class="small muted" style="margin-bottom:10px">Default is localhost-only. To expose the app on your LAN, enable network bind and set an API token on the server.</p>
+        <div class="inp-row" style="margin-bottom:10px;flex-wrap:wrap">
+          <input id="cfgHost" class="inp" style="width:160px" placeholder="127.0.0.1"/>
+          <input id="cfgPort" class="inp" style="width:100px" placeholder="5055"/>
+          <label class="small" style="display:flex;align-items:center;gap:6px">
+            <input id="cfgBindAll" type="checkbox"/> Bind all interfaces (0.0.0.0)
+          </label>
+          <label class="small" style="display:flex;align-items:center;gap:6px">
+            <input id="cfgComputeSizes" type="checkbox"/> Compute backup sizes (slow on NAS)
+          </label>
+        </div>
+        <div class="inp-row" style="margin-bottom:10px;flex-wrap:wrap">
+          <input id="cfgApiKey" class="inp" style="min-width:360px" type="password" placeholder="Browser API key (must match server config)"/>
+          <button class="btn btn-ghost" onclick="saveApiKey()">Save Browser Key</button>
+          <button class="btn btn-primary" onclick="saveNetworkSettings()">Save Server Settings</button>
+        </div>
+        <p class="small muted" id="cfgMsg"></p>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>System Check</h2><button class="btn btn-ghost" onclick="runHealthCheck()">Run</button></div>
+        <pre id="healthOut">Not checked yet.</pre>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  
+
+</div><!-- shell -->
+
+<div id="setupOverlay" class="setup-overlay" style="display:none">
+  <div class="setup-card">
+    <div class="setup-header">
+      <h1>First-time setup</h1>
+      <p>Configure this deployment before using iPhone Manager. Nothing is hardcoded in the app bundle.</p>
+    </div>
+
+    <label class="setup-label">Backup location</label>
+    <p class="small muted">Local folder or NAS UNC path where backups and logs will be stored.</p>
+    <div class="inp-row" style="margin-bottom:12px">
+      <input id="setupBackupRoot" class="inp" style="min-width:100%" placeholder="e.g. D:\iPhoneBackups or \\NAS\share\iPhoneBackups"/>
+    </div>
+
+    <label class="setup-label">libimobiledevice tools folder</label>
+    <p class="small muted">Optional if tools are already on PATH. Leave blank to auto-detect bundled tools.</p>
+    <div class="inp-row" style="margin-bottom:12px">
+      <input id="setupLibPath" class="inp" style="min-width:100%" placeholder="Optional tools folder"/>
+    </div>
+
+    <details class="setup-advanced">
+      <summary>Network and security</summary>
+      <div class="inp-row" style="margin-top:12px;flex-wrap:wrap">
+        <input id="setupHost" class="inp" style="width:160px" value="127.0.0.1"/>
+        <input id="setupPort" class="inp" style="width:100px" value="5055"/>
+        <label class="small" style="display:flex;align-items:center;gap:6px">
+          <input id="setupBindAll" type="checkbox"/> Expose on network
+        </label>
+      </div>
+      <div class="inp-row" style="margin-top:10px">
+        <input id="setupApiToken" class="inp" style="min-width:100%" type="password" placeholder="API token (required if exposing on network)"/>
+      </div>
+    </details>
+
+    <div class="setup-actions">
+      <button class="btn btn-ghost" onclick="testSetupPaths()">Test paths</button>
+      <button class="btn btn-primary" onclick="completeSetup()">Save and continue</button>
+    </div>
+
+    <pre id="setupResults" class="setup-results">Run a path test to verify backup storage and iPhone tools.</pre>
+    <p class="small muted" id="setupConfigPath"></p>
+  </div>
+</div>
+
+<script src="/app.js?v=5"></script>
+</body>
+</html>
+
+
